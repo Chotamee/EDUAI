@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="kk" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduAI - Қазақстанның AI Тест Платформасы</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- MathJax for LaTeX support -->
+    <script>
+        MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']]
+            },
+            svg: {
+                fontCache: 'global'
+            }
+        };
+    </script>
+    <script type="text/javascript" id="MathJax-script" async
+        src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+        </script>
+</head>
+
+<body>
+    <header>
+        <div class="logo">EduAI Тест Генераторы</div>
+        <div class="header-controls">
+            <button id="command-center-btn" class="command-btn" onclick="window.location.href='command.html'">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="3" width="7" height="7"></rect>
+                    <rect x="14" y="3" width="7" height="7"></rect>
+                    <rect x="14" y="14" width="7" height="7"></rect>
+                    <rect x="3" y="14" width="7" height="7"></rect>
+                </svg>
+                <span>Басқару панелі</span>
+            </button>
+            <button id="toggle-creator-btn" class="creator-btn">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M15 4V2"></path>
+                    <path d="M15 16v-2"></path>
+                    <path d="M8 9h2"></path>
+                    <path d="M20 9h2"></path>
+                    <path d="M17.8 11.8 19 13"></path>
+                    <path d="M15 9h.01"></path>
+                    <path d="M17.8 6.2 19 5"></path>
+                    <path d="m3 21 9-9"></path>
+                    <path d="M12.2 6.2 11 5"></path>
+                </svg>
+                <span>Мұғалім режимі</span>
+            </button>
+            <button id="theme-toggle-btn" class="icon-btn" aria-label="Toggle theme">🌙</button>
+        </div>
+    </header>
+
+    <main>
+        <!-- Creator Mode Modal/Overlay -->
+        <div id="creator-modal" class="modal hidden">
+            <div class="modal-content glass-panel">
+                <div class="modal-header">
+                    <h2>Жасанды интеллект арқылы тест жасау</h2>
+                    <button id="close-creator-btn" class="icon-btn">❌</button>
+                </div>
+                <div id="creator-auth-section" class="modal-body">
+                    <div class="form-group">
+                        <label for="teacher-password">Құпия сөз:</label>
+                        <input type="password" id="teacher-password" placeholder="Мұғалімнің құпия сөзін енгізіңіз">
+                    </div>
+                    <button id="login-teacher-btn" class="primary-btn">Кіру</button>
+                    <div id="auth-error-message" class="status-message" style="color: var(--wrong-color); display: none;">Құпия сөз қате!</div>
+                </div>
+
+                <div id="creator-form-section" class="modal-body hidden">
+                    <div class="form-group">
+                        <label>Қиындық деңгейі:</label>
+                        <div class="difficulty-selector">
+                            <div class="diff-chip" data-diff="Жеңіл">Жеңіл</div>
+                            <div class="diff-chip selected" data-diff="Орташа">Орташа</div>
+                            <div class="diff-chip" data-diff="Қиын">Қиын</div>
+                            <div class="diff-chip" data-diff="Олимпиадалық">Олимпиадалық</div>
+                        </div>
+                        <input type="hidden" id="difficulty" value="Орташа">
+                    </div>
+                    <div class="form-group">
+                        <label for="test-topic">Тест тақырыбы:</label>
+                        <input type="text" id="test-topic" placeholder="Мысалы: Квадрат теңдеулер және Виет теоремасы">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="question-count">Сұрақтар саны:</label>
+                        <input type="number" id="question-count" value="5" min="1" max="10">
+                    </div>
+                    <button id="generate-btn" class="primary-btn">Сұрақтарды генерациялау</button>
+                    <div id="generation-status" class="status-message"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Start Screen (Test Bank) -->
+        <div id="start-screen" class="screen view-active">
+            <div class="glass-panel">
+                <div class="start-header">
+                    <h1>Тесттер базасы</h1>
+                    <p>Бастау үшін тізімнен кез келген тестті таңдаңыз.</p>
+                </div>
+                
+                <div id="test-bank-container" class="test-bank-grid">
+                    <!-- Loading skeleton -->
+                    <div class="status-message" style="color: var(--text-color);">
+                        ⏳ Деректер базасына қосылуда...
+                    </div>
+                </div>
+
+                <div id="selected-test-area" class="hidden text-center" style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid rgba(255,255,255,0.1);">
+                    <h3 id="selected-test-title">Таңдалған тест</h3>
+                    <p id="selected-test-info" style="color: var(--text-muted); margin-bottom: 1rem; font-size: 0.9rem;"></p>
+                    
+                    <div class="form-group" style="max-width: 300px; margin: 0 auto 1.5rem auto; text-align: left;">
+                        <label for="student-name">Атыңыз (міндетті):</label>
+                        <input type="text" id="student-name" placeholder="Мысалы: Арман Ахметов" required>
+                        <small id="student-name-error" style="color: var(--wrong-color); display: none; margin-top: 0.2rem;">Атыңызды енгізіңіз</small>
+                    </div>
+
+                    <button id="start-test-btn" class="primary-btn">Тестті бастау</button>
+                    <button id="cancel-test-btn" class="secondary-btn" style="margin-top: 0.5rem;">Бас тарту</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Test Screen (Card Flip mechanism) -->
+        <div id="test-screen" class="screen hidden">
+            <div class="test-header">
+                <div class="progress-bar">
+                    <div id="progress-fill" class="progress-fill"></div>
+                </div>
+                <div class="test-meta">
+                    <span id="question-counter">Сұрақ: 1 / 10</span>
+                    <span id="timer">Уақыт: 00:00</span>
+                </div>
+            </div>
+
+            <div class="scene">
+                <!-- We will toggle 'is-flipped' class to animate transitions -->
+                <div id="card-container" class="card">
+                    <!-- The front face displays the current question -->
+                    <div id="card-front" class="card-face card-front glass-panel">
+                        <!-- Content injected via JS -->
+                    </div>
+                    <!-- The back face displays the next question during animation -->
+                    <div id="card-back" class="card-face card-back glass-panel">
+                        <!-- Content injected via JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Result Screen -->
+        <div id="result-screen" class="screen hidden">
+            <div class="glass-panel text-center">
+                <div class="result-icon">🎓</div>
+                <h1>Тест аяқталды!</h1>
+                <p>Сіздің нәтижеңіз:</p>
+                
+                <div class="score-display">
+                    <svg class="score-circle" viewBox="0 0 100 100">
+                        <circle class="score-circle-bg" cx="50" cy="50" r="45"></circle>
+                        <circle id="score-circle-fill" class="score-circle-fill" cx="50" cy="50" r="45"></circle>
+                    </svg>
+                    <div id="score-text" class="score-text">0%</div>
+                </div>
+
+                <div class="result-stats">
+                    <div class="stat-item">
+                        <span class="stat-label">Өту уақыты:</span>
+                        <span id="final-time" class="stat-value">00:00</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Дұрыс жауаптар:</span>
+                        <span id="final-score" class="stat-value">0 / 0</span>
+                    </div>
+                </div>
+
+                <div id="save-status" class="status-message" style="margin-bottom: 1.5rem; font-weight: 600;"></div>
+
+                <button id="restart-btn" class="primary-btn">Қайтадан көру</button>
+            </div>
+        </div>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
