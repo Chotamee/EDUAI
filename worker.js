@@ -46,7 +46,7 @@ export default {
 
       // 2. Proxy to AI (Gemini)
       if (path === "/ai") {
-        const targetUrlStr = request.headers.get("X-Target-URL") || "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
+        const targetUrlStr = request.headers.get("X-Target-URL") || "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent";
         const aiUrl = new URL(targetUrlStr);
         aiUrl.searchParams.set("key", env.GEMINI_API_KEY);
 
