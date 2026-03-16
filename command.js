@@ -1,7 +1,11 @@
 // --- State ---
 let rawResults = [];
 let testBank = [];
-const SHEET_URL = "https://script.google.com/macros/s/AKfycbztNCzTA-nwomQ6_yga7XdhrkByC21HIITsBOUTxKol4lzJ9PyQouEuTqtTm282ahJ8/exec";
+const WORKER_URL = window.CONFIG ? window.CONFIG.WORKER_URL : "";
+
+if (!WORKER_URL) {
+    console.error("CRITICAL: WORKER_URL is missing! Please check config.js.");
+}
 
 
 // --- Initialization ---
@@ -94,9 +98,9 @@ async function fetchData() {
     tableLoading.style.display = 'block';
 
     try {
-        const response = await fetch(SHEET_URL, {
+        const response = await fetch(`${WORKER_URL}/sheets`, {
             method: 'POST',
-            body: JSON.stringify({ action: "get_command_data" }), // We'll need to update script.js to support this or fetch twice
+            body: JSON.stringify({ action: "get_command_data" }),
             headers: { 'Content-Type': 'text/plain;charset=utf-8' }
         });
 
@@ -109,13 +113,13 @@ async function fetchData() {
 
         // Let's implement one more action in Apps Script: get_results
 
-        const resultsResponse = await fetch(SHEET_URL, {
+        const resultsResponse = await fetch(`${WORKER_URL}/sheets`, {
             method: 'POST', body: JSON.stringify({ action: "get_results" }),
             headers: { 'Content-Type': 'text/plain;charset=utf-8' }
         });
         const resultsData = await resultsResponse.json();
 
-        const testsResponse = await fetch(SHEET_URL, {
+        const testsResponse = await fetch(`${WORKER_URL}/sheets`, {
             method: 'POST', body: JSON.stringify({ action: "get_tests" }),
             headers: { 'Content-Type': 'text/plain;charset=utf-8' }
         });
