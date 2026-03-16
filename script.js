@@ -110,9 +110,15 @@ diffChips.forEach(chip => {
     });
 });
 
-// --- Hardcoded API Key & Sheet URL ---
-const API_KEY = "AIzaSyBZOtF93zgAXw_tc-4-NXxTAL9irFpJl6w";
-const SHEET_URL = "https://script.google.com/macros/s/AKfycbztNCzTA-nwomQ6_yga7XdhrkByC21HIITsBOUTxKol4lzJ9PyQouEuTqtTm282ahJ8/exec";
+// --- Config and API Keys ---
+// These are loaded from config.js (which is gitignored)
+const API_KEY = window.CONFIG ? window.CONFIG.API_KEY : "";
+const SHEET_URL = window.CONFIG ? window.CONFIG.SHEET_URL : "";
+
+if (!API_KEY || !SHEET_URL) {
+    console.error("CRITICAL: API_KEY or SHEET_URL is missing! Please create config.js from .env.example");
+    alert("Қате: Конфигурация файлы (config.js) табылмады немесе бос. Жөндеу үшін .env.example файлын қараңыз.");
+}
 
 // --- Auto Model Selection ---
 async function getBestAvailableModel(apiKey) {
