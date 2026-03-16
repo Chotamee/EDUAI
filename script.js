@@ -47,9 +47,18 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Helper to render math across the page
+let mathQueue = [];
 window.renderMath = function(element = document.body) {
-    if (window.MathJax && window.MathJax.typesetPromise) {
+    if (window.MathJax && window.MathJax.typesetPromise && window.mathJaxReady) {
         window.MathJax.typesetPromise([element]).catch((err) => console.warn('MathJax error', err));
+    } else {
+        mathQueue.push(element);
+    }
+};
+
+window.onMathJaxReady = function() {
+    while(mathQueue.length > 0) {
+        window.renderMath(mathQueue.shift());
     }
 };
 
@@ -481,8 +490,8 @@ function renderQuestion(element, questionData, index) {
         </div>
     `;
 
-    // Process MathJax
-    window.renderMath(element);
+    // Process MathJax (with slight delay to ensure DOM is ready)
+    setTimeout(() => window.renderMath(element), 50);
 
     // Add click listeners to options
     const options = element.querySelectorAll('.option-item');

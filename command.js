@@ -15,9 +15,18 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Helper to render math across the page
+let mathQueue = [];
 window.renderMath = function(element = document.body) {
-    if (window.MathJax && window.MathJax.typesetPromise) {
+    if (window.MathJax && window.MathJax.typesetPromise && window.mathJaxReady) {
         window.MathJax.typesetPromise([element]).catch((err) => console.warn('MathJax error', err));
+    } else {
+        mathQueue.push(element);
+    }
+};
+
+window.onMathJaxReady = function() {
+    while(mathQueue.length > 0) {
+        window.renderMath(mathQueue.shift());
     }
 };
 
@@ -215,7 +224,7 @@ function renderResultsTable(data) {
     });
 
     // Render Math in Table
-    window.renderMath(body);
+    setTimeout(() => window.renderMath(body), 50);
 }
 
 function filterTable(query) {
@@ -322,7 +331,7 @@ window.inspectSession = (timestamp) => {
     content.innerHTML = detailsHtml;
 
     // Render Math in Modal
-    window.renderMath(content);
+    setTimeout(() => window.renderMath(content), 50);
 
     // Set up inspector features (Feature 10: Print)
     document.getElementById('print-result').onclick = () => window.print();
