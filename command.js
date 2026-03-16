@@ -15,18 +15,17 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Helper to render math across the page
-let mathQueue = [];
 window.renderMath = function(element = document.body) {
-    if (window.MathJax && window.MathJax.typesetPromise && window.mathJaxReady) {
-        window.MathJax.typesetPromise([element]).catch((err) => console.warn('MathJax error', err));
-    } else {
-        mathQueue.push(element);
-    }
-};
-
-window.onMathJaxReady = function() {
-    while(mathQueue.length > 0) {
-        window.renderMath(mathQueue.shift());
+    if (window.renderMathInElement) {
+        window.renderMathInElement(element, {
+            delimiters: [
+                {left: '$$', right: '$$', display: true},
+                {left: '$', right: '$', display: false},
+                {left: '\\(', right: '\\)', display: false},
+                {left: '\\[', right: '\\]', display: true}
+            ],
+            throwOnError: false
+        });
     }
 };
 

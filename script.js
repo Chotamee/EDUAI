@@ -47,18 +47,17 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Helper to render math across the page
-let mathQueue = [];
 window.renderMath = function(element = document.body) {
-    if (window.MathJax && window.MathJax.typesetPromise && window.mathJaxReady) {
-        window.MathJax.typesetPromise([element]).catch((err) => console.warn('MathJax error', err));
-    } else {
-        mathQueue.push(element);
-    }
-};
-
-window.onMathJaxReady = function() {
-    while(mathQueue.length > 0) {
-        window.renderMath(mathQueue.shift());
+    if (window.renderMathInElement) {
+        window.renderMathInElement(element, {
+            delimiters: [
+                {left: '$$', right: '$$', display: true},
+                {left: '$', right: '$', display: false},
+                {left: '\\(', right: '\\)', display: false},
+                {left: '\\[', right: '\\]', display: true}
+            ],
+            throwOnError: false
+        });
     }
 };
 
@@ -226,7 +225,7 @@ async function generateQuestionsWithGemini(modelName, topic, count, difficulty) 
 
     Нұсқаулық:
     1. Барлық сұрақтар мен жауаптар ТОЛЫҒЫМЕН ҚАЗАҚ ТІЛІНДЕ болуы керек.
-    2. Егер математикалық формулалар болса, оларды міндетті түрде MathJax форматында жазыңыз: \\\\( формула \\\\).
+    2. Егер математикалық формулалар болса, оларды міндетті түрде LaTeX форматында жазыңыз: $ формула $ немесе \\( формула \\).
     3. Әр сұрақта 4 жауап нұсқасы болуы керек (A, B, C, D).
     4. Жауапты ТЕК КЕЛЕСІ JSON форматында қайтарыңыз:
     [
@@ -247,7 +246,7 @@ async function generateQuestionsWithGemini(modelName, topic, count, difficulty) 
         body: JSON.stringify({
             // Added explicit system instruction for JSON and escaping
             systemInstruction: {
-                parts: [{ text: "You are a helpful education assistant. Always return valid JSON. When writing LaTeX, strictly escape all backslashes by using two backslashes (e.g., \\\\( and \\\\), \\\\frac)." }]
+                parts: [{ text: "You are a helpful education assistant. Always return valid JSON. When writing LaTeX, use single backslashes correctly (e.g., \\( and \\))." }]
             },
             contents: [{ parts: [{ text: prompt }] }],
             generationConfig: {
@@ -274,13 +273,8 @@ async function generateQuestionsWithGemini(modelName, topic, count, difficulty) 
         // 1. Remove markdown blocks if they slipped through
         textObj = textObj.replace(/```json/gi, '').replace(/```/g, '').trim();
 
-        // 2. Fix unescaped backslashes and carriage returns that break JSON
-        // Find every backslash that is NOT already escaping a valid JSON character
-        // and double it.
-        textObj = textObj.replace(/\\([^"\\/bfnrtu])/g, "\\\\$1");
-
-        // 3. Convert actual newlines to escaped \n so they are legal in JSON strings
-        textObj = textObj.replace(/\n/g, '\\n').replace(/\r/g, '');
+        // 2. Fix carriage returns that break JSON
+        textObj = textObj.replace(/\r/g, '');
 
         // 4. Remove trailing commas
         textObj = textObj.replace(/,\s*([\]}])/g, "$1");
