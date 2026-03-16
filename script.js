@@ -46,6 +46,13 @@ document.addEventListener('DOMContentLoaded', () => {
     loadTestBank();
 });
 
+// Helper to render math across the page
+window.renderMath = function(element = document.body) {
+    if (window.MathJax && window.MathJax.typesetPromise) {
+        window.MathJax.typesetPromise([element]).catch((err) => console.warn('MathJax error', err));
+    }
+};
+
 themeToggleBtn.addEventListener('click', () => {
     const currentTheme = document.documentElement.getAttribute('data-theme');
     const newTheme = currentTheme === 'light' ? 'dark' : 'light';
@@ -475,9 +482,7 @@ function renderQuestion(element, questionData, index) {
     `;
 
     // Process MathJax
-    if (window.MathJax) {
-        window.MathJax.typesetPromise([element]).catch((err) => console.log('MathJax error', err));
-    }
+    window.renderMath(element);
 
     // Add click listeners to options
     const options = element.querySelectorAll('.option-item');

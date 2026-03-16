@@ -14,6 +14,13 @@ document.addEventListener('DOMContentLoaded', () => {
     setupAuth();
 });
 
+// Helper to render math across the page
+window.renderMath = function(element = document.body) {
+    if (window.MathJax && window.MathJax.typesetPromise) {
+        window.MathJax.typesetPromise([element]).catch((err) => console.warn('MathJax error', err));
+    }
+};
+
 function setupAuth() {
     const loginBtn = document.getElementById('login-btn');
     const passInput = document.getElementById('command-password');
@@ -206,6 +213,9 @@ function renderResultsTable(data) {
         `;
         body.appendChild(tr);
     });
+
+    // Render Math in Table
+    window.renderMath(body);
 }
 
 function filterTable(query) {
@@ -310,6 +320,9 @@ window.inspectSession = (timestamp) => {
 
     detailsHtml += `</div>`;
     content.innerHTML = detailsHtml;
+
+    // Render Math in Modal
+    window.renderMath(content);
 
     // Set up inspector features (Feature 10: Print)
     document.getElementById('print-result').onclick = () => window.print();
