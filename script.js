@@ -123,7 +123,7 @@ if (!WORKER_URL) {
 async function getBestAvailableModel() {
     try {
         const response = await fetch(`${WORKER_URL}/models`);
-        if (!response.ok) return "gemini-1.5-flash-latest"; // Fallback if list fails
+        if (!response.ok) return "gemini-1.5-flash"; // Fallback if list fails
 
         const data = await response.json();
         const validModels = data.models
