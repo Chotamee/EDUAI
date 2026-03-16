@@ -111,7 +111,7 @@ diffChips.forEach(chip => {
 });
 
 // --- Hardcoded API Key & Sheet URL ---
-const API_KEY = "AIzaSyBqVhVCFevapb2Dn8vNhKmkcRSIxmeKJdc";
+const API_KEY = "AIzaSyBZOtF93zgAXw_tc-4-NXxTAL9irFpJl6w";
 const SHEET_URL = "https://script.google.com/macros/s/AKfycbztNCzTA-nwomQ6_yga7XdhrkByC21HIITsBOUTxKol4lzJ9PyQouEuTqtTm282ahJ8/exec";
 
 // --- Auto Model Selection ---
