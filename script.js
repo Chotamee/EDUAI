@@ -111,19 +111,18 @@ diffChips.forEach(chip => {
 });
 
 // --- Config and API Keys ---
-// These are loaded from config.js (which is gitignored)
-const API_KEY = window.CONFIG ? window.CONFIG.API_KEY : "";
-const SHEET_URL = window.CONFIG ? window.CONFIG.SHEET_URL : "";
+// Now using Cloudflare Worker Proxy to keep keys secure!
+const WORKER_URL = window.CONFIG ? window.CONFIG.WORKER_URL : "";
 
-if (!API_KEY || !SHEET_URL) {
-    console.error("CRITICAL: API_KEY or SHEET_URL is missing! Please create config.js from .env.example");
-    alert("Қате: Конфигурация файлы (config.js) табылмады немесе бос. Жөндеу үшін .env.example файлын қараңыз.");
+if (!WORKER_URL) {
+    console.error("CRITICAL: WORKER_URL is missing! Please create config.js with your worker URL.");
+    alert("Қате: Cloudflare Worker URL табылмады. config.js файлын тексеріңіз.");
 }
 
 // --- Auto Model Selection ---
-async function getBestAvailableModel(apiKey) {
+async function getBestAvailableModel() {
     try {
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
+        const response = await fetch(`${WORKER_URL}/models`);
         if (!response.ok) return "gemini-1.5-flash-latest"; // Fallback if list fails
 
         const data = await response.json();
@@ -163,10 +162,10 @@ generateBtn.addEventListener('click', async () => {
     generateBtn.disabled = true;
 
     try {
-        const modelName = await getBestAvailableModel(API_KEY);
+        const modelName = await getBestAvailableModel();
         console.log(`Using model: ${modelName}`);
 
-        const generatedQuestions = await generateQuestionsWithGemini(API_KEY, modelName, topic, count, difficulty);
+        const generatedQuestions = await generateQuestionsWithGemini(modelName, topic, count, difficulty);
         if (generatedQuestions && generatedQuestions.length > 0) {
             statusMessage.textContent = '✅ Сұрақтар дайын! Базаға сақталуда...';
 
@@ -195,8 +194,9 @@ generateBtn.addEventListener('click', async () => {
     }
 });
 
-async function generateQuestionsWithGemini(apiKey, modelName, topic, count, difficulty) {
-    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
+async function generateQuestionsWithGemini(modelName, topic, count, difficulty) {
+    const endpoint = `${WORKER_URL}/ai`;
+    const targetUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent`;
 
     // We explicitly ask for a JSON array with 4 options and the correct index.
     // Also ask AI to use LaTeX formatting (with double dollar $$ for block, single $ for inline).
@@ -225,7 +225,8 @@ async function generateQuestionsWithGemini(apiKey, modelName, topic, count, diff
     const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'X-Target-URL': targetUrl // Worker uses this to know where to proxy
         },
         body: JSON.stringify({
             // Added explicit system instruction for JSON and escaping
@@ -276,7 +277,7 @@ async function generateQuestionsWithGemini(apiKey, modelName, topic, count, diff
 // --- Test Bank API Functions ---
 async function loadTestBank() {
     try {
-        const response = await fetch(SHEET_URL, {
+        const response = await fetch(`${WORKER_URL}/sheets`, {
             method: 'POST',
             body: JSON.stringify({ action: "get_tests" }),
             headers: { 'Content-Type': 'text/plain;charset=utf-8' } // Text plain prevents CORS preflight
@@ -296,7 +297,7 @@ async function loadTestBank() {
 
 async function saveTestToBank(topic, difficulty, count, questionsArray) {
     try {
-        const response = await fetch(SHEET_URL, {
+        const response = await fetch(`${WORKER_URL}/sheets`, {
             method: 'POST',
             body: JSON.stringify({
                 action: "save_test",
@@ -589,7 +590,7 @@ async function saveResultsToSheets(percentage, mins, secs) {
 
     try {
         // Now using text/plain to get a response back
-        const response = await fetch(SHEET_URL, {
+        const response = await fetch(`${WORKER_URL}/sheets`, {
             method: 'POST',
             body: JSON.stringify(payload),
             headers: { 'Content-Type': 'text/plain;charset=utf-8' }
