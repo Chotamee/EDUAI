@@ -1,6 +1,5 @@
 // This file is gitignored. Do not upload to GitHub.
 window.CONFIG = {
-    // 1. Deploy your Cloudflare Worker.
-    // 2. Paste the Worker URL here (e.g., "https://your-worker.your-subdomain.workers.dev")
-    WORKER_URL: "https://eduai-proxy.zogogo1029.workers.dev"
+    // URL к Vercel API (или оставьте пустым, если API на том же домене)
+    WORKER_URL: "/api"
 };
